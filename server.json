@@ -16,7 +16,7 @@
         {
             "title": "govee_nodeserver: A Polyglot v2 interface to Govee",
             "author": "Jean-Francois Tremblay (AutomationGeek)",
-            "version": "3.0.0",
+            "version": "3.0.1",
             "date": "September 28, 2021",
             "source": "https://github.com/UniversalDevicesInc-PG3/udi-govee-nodeserver",
             "license": "https://github.com/UniversalDevicesInc-PG3/udi-govee-nodeserver/blob/master/README.md"
