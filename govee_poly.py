@@ -12,9 +12,9 @@ PATCHED 2026-11-02: developer-API rate-limit redesign (fork of UniversalDevicesI
     nodes (was: every node fetched the full device list + ALL device states for
     itself = 72 calls/cycle for 8 nodes; now 8 calls/cycle).
   - Shared per-minute budget gate with a command reserve: poll calls run only
-    while the API-reported per-minute remaining is above CMD_RESERVE, so an eISY
-    command always has calls left in the current minute. Commands preempt polls
-    (single loop serializes; poll re-checks budget before every call).
+    while the API-reported per-minute remaining is above CMD_RESERVE, to retain headroom
+    for commands. This does not guarantee success or reserve daily quota;
+    the poll loop re-checks available budget before every call.
   - Commands use the warm device cache (1 API call per command; was 2) and report
     honest results: drivers are only set on success, failures raise a Notice
     (was: ST set optimistically even when the API call 429'd).
@@ -36,10 +36,22 @@ SERVERDATA = json.load(open('server.json'))
 VERSION = SERVERDATA['credits'][0]['version']
 
 # PATCH: per-minute command reserve. Poll calls never consume the last
-# CMD_RESERVE calls of the current API minute window, so a command (1 call via
-# the warm cache) can always execute. The library's own throttle is lowered to
-# match so commands are not put to sleep while the reserve is intact.
+# CMD_RESERVE calls reported in the current API minute window. This is only
+# best-effort headroom, not a guarantee against daily limits or other clients.
+# The library throttle is lowered to the same threshold.
 CMD_RESERVE = 2
+
+def percent_to_library(value):
+    """eISY percent -> library 0..254; ceil preserves percent on 0..100 APIs."""
+    percent = int(value)
+    if not 0 <= percent <= 100:
+        raise ValueError('Brightness must be between 0 and 100 percent')
+    return (percent * 254 + 99) // 100
+
+def library_to_percent(value):
+    """Library 0..254 -> nearest whole percent; never publish over 100%."""
+    raw = max(0, min(254, int(value)))
+    return (raw * 100 + 127) // 254
 
 def get_profile_info(logger):
     pvf = 'profile/version.txt'
@@ -270,9 +282,17 @@ class GoveeLight(udi_interface.Node):
                       lambda: self.setDriver('ST', 0, True))
 
     def setBrightness(self, command):
-        bri = int(command.get('value'))
-        self._run_cmd(lambda g: g.set_brightness(self.device_id, bri),
-                      lambda: self.setDriver('GV1', bri))
+        try:
+            raw = percent_to_library(command.get('value'))
+        except (ValueError, TypeError) as ex:
+            LOGGER.error('invalid brightness for %s: %s', self.device_id, ex)
+            return
+        # Report the library's applied/quantized value, not the input request.
+        def applied():
+            ctrl = self.poly.getNode('controller')
+            device = next(d for d in ctrl._govee.devices if d.device == self.device_id)
+            self.setDriver('GV1', library_to_percent(device.brightness))
+        self._run_cmd(lambda g: g.set_brightness(self.device_id, raw), applied)
 
     def setColor(self,command):
         try:
@@ -300,11 +320,16 @@ class GoveeLight(udi_interface.Node):
         try:
             if deviceState is None:
                 return  # deferred by budget gate or errored; keep last values
+            notice_key = 'offline_' + self.address
+            if deviceState.online is not True:
+                self.poly.Notices[notice_key] = '{} is offline or has unknown reachability; displayed values are last known.'.format(self.name)
+                return  # Do not turn stale powerState into a new On/Off report.
+            self.poly.Notices.delete(notice_key)
             if deviceState.power_state:
                 self.setDriver('ST', 100)
             else:
                 self.setDriver('ST', 0)
-            self.setDriver('GV1', int(deviceState.brightness))
+            self.setDriver('GV1', library_to_percent(deviceState.brightness))
             self.setDriver('GV6', int(deviceState.color[0]))
             self.setDriver('GV7', int(deviceState.color[1]))
             self.setDriver('GV8', int(deviceState.color[2]))
