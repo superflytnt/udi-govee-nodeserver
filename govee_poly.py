@@ -292,7 +292,14 @@ class GoveeLight(udi_interface.Node):
             ctrl = self.poly.getNode('controller')
             device = next(d for d in ctrl._govee.devices if d.device == self.device_id)
             self.setDriver('GV1', library_to_percent(device.brightness))
-        self._run_cmd(lambda g: g.set_brightness(self.device_id, raw), applied)
+        async def set_percent(g):
+            device = next(d for d in g.devices if d.device == self.device_id)
+            # This plugin uses Govee's legacy HTTP API, whose documented command
+            # range is 0..100. Do not let the library guess 0..254 on first use:
+            # a value below 100 would succeed at the wrong physical brightness.
+            device.learned_set_brightness_max = 100
+            return await g.set_brightness(self.device_id, raw)
+        self._run_cmd(set_percent, applied)
 
     def setColor(self,command):
         try:
@@ -323,6 +330,11 @@ class GoveeLight(udi_interface.Node):
             notice_key = 'offline_' + self.address
             if deviceState.online is not True:
                 self.poly.Notices[notice_key] = '{} is offline or has unknown reachability; displayed values are last known.'.format(self.name)
+                # Migrate only an old invalid 0..254 display value. This is a
+                # unit correction, not a fresh observation of the offline light.
+                old_brightness = self.getDriver('GV1')
+                if old_brightness is not None and int(old_brightness) > 100:
+                    self.setDriver('GV1', library_to_percent(old_brightness))
                 return  # Do not turn stale powerState into a new On/Off report.
             self.poly.Notices.delete(notice_key)
             if deviceState.power_state:
