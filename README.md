@@ -8,6 +8,11 @@ This fork builds on Jean-Francois Tremblay's (AutomationGeek) Govee node server 
 - The library uses a 0-254 brightness scale internally, while eISY and Govee's legacy HTTP API use percentages. This fork converts the readback and sets the API command range explicitly, including the first brightness command after startup.
 - Offline devices can return stale power values. This fork keeps their last-known status and adds an offline notice rather than presenting stale data as a fresh observation. Command failures also produce a notice instead of an optimistic success status.
 
+### Version history
+
+- **3.1.0** (2026-11-07): External heartbeat - optional `heartbeat_url` custom parameter. The plugin pings it on every short poll, regardless of device state or whether the API sweep succeeds, so an external cron monitor (e.g. UptimeRobot heartbeat) alerts when the plugin itself freezes. Empty (default) disables the ping.
+- **3.0.1-patched** (2026-11-02): Rate-limit redesign described above: one shared client and state sweep, budget headroom for commands, honest command results.
+
 These changes were needed to reduce avoidable API-limit failures and make brightness and status useful in day-to-day control. On/off and percentage-brightness commands were tested through eISY on six reachable lights, with separate Govee API readbacks and state restoration. Scheduled polling was also observed after installation. Offline lights were not physically tested.
 
 ### Known limits
@@ -27,6 +32,8 @@ This Poly provides an interface between Govee and Polyglot v3 server. Provide ba
 2 - Install Govee from Polyglot Store
 
 3 - Create a custom variable called api_key and paste the api key received.
+
+4 - (Optional) Create a custom variable called heartbeat_url with a heartbeat/cron-monitor URL. The plugin pings it on every short poll, even when devices are off or the API sweep fails, so your monitor alerts when the plugin itself freezes. Leave empty to disable.
 
 ## Source
 
