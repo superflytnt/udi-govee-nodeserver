@@ -74,6 +74,9 @@ class Controller(udi_interface.Node):
         self.queryON = False
         self.api_key = ""
         self.hb = 0
+        # Optional external heartbeat URL (e.g. UptimeRobot heartbeat). Pinged
+        # on every short poll regardless of device state; empty disables.
+        self.heartbeat_url = ""
 
         # PATCH: shared Govee client living on a single background loop.
         self._loop = None
@@ -158,6 +161,13 @@ class Controller(udi_interface.Node):
     def parameterHandler(self, params):
         self.poly.Notices.clear()
         try:
+            if 'heartbeat_url' in params:
+                self.heartbeat_url = params['heartbeat_url'].strip()
+            else:
+                self.heartbeat_url = ""
+            if self.heartbeat_url:
+                LOGGER.info('Heartbeat URL configured - pinging on every short poll')
+
             if 'api_key' in params:
                 self.api_key = params['api_key']
             else:
@@ -190,6 +200,7 @@ class Controller(udi_interface.Node):
     def poll(self, pollflag):
         if 'shortPoll' in pollflag:
             self.setDriver('ST', 1)
+            self._ping_heartbeat()
             # PATCH: one shared sweep, then distribute. Was: each node ran its
             # own _query() = 9 API calls per node per cycle.
             try:
@@ -200,6 +211,23 @@ class Controller(udi_interface.Node):
             self._distribute(states)
         else:
             self.heartbeat()
+
+    def _ping_heartbeat(self):
+        """Ping the configured external heartbeat URL, if any.
+
+        Fires on every short poll whether devices are on, off, or the API
+        sweep fails: the signal is plugin liveness, not device state.
+        Failures are logged, never raised - a network hiccup must not
+        break the poll loop.
+        """
+        if not self.heartbeat_url:
+            return
+        import urllib.request
+        try:
+            with urllib.request.urlopen(self.heartbeat_url, timeout=5) as resp:
+                LOGGER.debug('heartbeat ping sent (HTTP %s)', resp.status)
+        except Exception as ex:
+            LOGGER.warning('heartbeat ping failed: %s', ex)
 
     def _distribute(self, states):
         for node in self.poly.nodes():
