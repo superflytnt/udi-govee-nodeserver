@@ -77,6 +77,7 @@ class Controller(udi_interface.Node):
         # Optional external heartbeat URL (e.g. UptimeRobot heartbeat). Pinged
         # on every short poll regardless of device state; empty disables.
         self.heartbeat_url = ""
+        self._heartbeat_last = 0.0  # monotonic time of last ping attempt
 
         # PATCH: shared Govee client living on a single background loop.
         self._loop = None
@@ -222,6 +223,14 @@ class Controller(udi_interface.Node):
         """
         if not self.heartbeat_url:
             return
+        # Throttle attempts to at most one per 60s: monitoring endpoints
+        # (e.g. UptimeRobot) rate-limit faster pings with HTTP 429, and the
+        # monitor only needs a ping inside its own expected interval.
+        import time
+        now = time.monotonic()
+        if now - self._heartbeat_last < 60:
+            return
+        self._heartbeat_last = now
         import urllib.request
         try:
             with urllib.request.urlopen(self.heartbeat_url, timeout=5) as resp:
