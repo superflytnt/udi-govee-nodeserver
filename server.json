@@ -6,22 +6,23 @@
     "install": "install.sh",
     "shortPoll": "90",
     "longPoll": "600",
-	"logLevel": "INFO",
+    "logLevel": "INFO",
     "description": "Basic control(On/Off) of Govee Light Strip on ISY994.",
     "notice": "https://github.com/UniversalDevicesInc-PG3/udi-govee-nodeserver/blob/master/LICENSE",
-	"customParams": {
-		"api_key": ""
-	},
+    "customParams": {
+        "api_key": "",
+        "heartbeat_url": ""
+    },
     "credits": [
         {
             "title": "govee_nodeserver: A Polyglot v2 interface to Govee",
             "author": "Jean-Francois Tremblay (AutomationGeek)",
-            "version": "3.0.1",
-            "date": "September 28, 2021",
+            "version": "3.1.0",
+            "date": "2026-11-07",
             "source": "https://github.com/UniversalDevicesInc-PG3/udi-govee-nodeserver",
             "license": "https://github.com/UniversalDevicesInc-PG3/udi-govee-nodeserver/blob/master/README.md"
         },
-	{
+        {
             "title": "udi-poly-template-python: A Polyglot v2 Poly template",
             "author": "James Milne (Einstein.42)",
             "version": "2.0.0",
@@ -29,7 +30,7 @@
             "source": "https://github.com/Einstein42/udi-poly-template-python",
             "license": "https://raw.githubusercontent.com/Einstein42/udi-poly-template-python/master/LICENSE"
         },
-	{
+        {
             "title": "govee-api-laggat Package",
             "author": "LaggAt",
             "version": "0.0.0",
@@ -38,13 +39,13 @@
             "license": "https://github.com/dr1rrb/python-govee-api/blob/main/LICENSE"
         }
     ],
-	"store": {
-		"developer": "jf.tremblay@gmail.com",
-		"purchaseOptions": [
-			{
-				"isPerpetual": true,
-				"price": 0
-			}
-		]
-	}
+    "store": {
+        "developer": "jf.tremblay@gmail.com",
+        "purchaseOptions": [
+            {
+                "isPerpetual": true,
+                "price": 0
+            }
+        ]
+    }
 }
