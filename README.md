@@ -10,6 +10,7 @@ This fork builds on Jean-Francois Tremblay's (AutomationGeek) Govee node server 
 
 ### Version history
 
+- **3.1.1** (2026-11-07): Heartbeat pings throttled to at most one per 60 seconds, so fast poll intervals cannot trip monitor-endpoint rate limits (HTTP 429).
 - **3.1.0** (2026-11-07): External heartbeat - optional `heartbeat_url` custom parameter. The plugin pings it on every short poll, regardless of device state or whether the API sweep succeeds, so an external cron monitor (e.g. UptimeRobot heartbeat) alerts when the plugin itself freezes. Empty (default) disables the ping.
 - **3.0.1-patched** (2026-11-02): Rate-limit redesign described above: one shared client and state sweep, budget headroom for commands, honest command results.
 
