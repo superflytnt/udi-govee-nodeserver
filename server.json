@@ -1,14 +1,14 @@
 {
     "name": "Govee",
-    "docs": "https://github.com/UniversalDevicesInc-PG3/udi-milight-polyglot/blob/master/README.md",
+    "docs": "https://github.com/superflytnt/udi-govee-nodeserver",
     "type": "python3",
     "executable": "govee_poly.py",
     "install": "install.sh",
     "shortPoll": "90",
     "longPoll": "600",
     "logLevel": "INFO",
-    "description": "Basic control(On/Off) of Govee Light Strip on ISY994.",
-    "notice": "https://github.com/UniversalDevicesInc-PG3/udi-govee-nodeserver/blob/master/LICENSE",
+    "description": "Govee legacy-API on/off, brightness and status for PG3x/eISY, with shared polling and API-budget checks.",
+    "notice": "https://github.com/superflytnt/udi-govee-nodeserver/blob/main/LICENSE",
     "customParams": {
         "api_key": "",
         "heartbeat_url": ""
@@ -20,7 +20,7 @@
             "version": "3.1.1",
             "date": "2026-11-07",
             "source": "https://github.com/UniversalDevicesInc-PG3/udi-govee-nodeserver",
-            "license": "https://github.com/UniversalDevicesInc-PG3/udi-govee-nodeserver/blob/master/README.md"
+            "license": "https://github.com/UniversalDevicesInc-PG3/udi-govee-nodeserver/blob/master/LICENSE"
         },
         {
             "title": "udi-poly-template-python: A Polyglot v2 Poly template",
