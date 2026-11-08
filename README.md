@@ -10,7 +10,7 @@ This fork builds on Jean-Francois Tremblay's (AutomationGeek) Govee node server 
 
 ### Version history
 
-- **3.1.1** (2026-11-07): Heartbeat pings throttled to at most one per 60 seconds, so fast poll intervals cannot trip monitor-endpoint rate limits (HTTP 429).
+- **3.1.1** (2026-11-07): Heartbeat pings throttled to at most one per 60 seconds, to reduce rapid-ping HTTP 429 responses; monitor-specific limits still apply.
 - **3.1.0** (2026-11-07): External heartbeat - optional `heartbeat_url` custom parameter. The plugin pings it on every short poll, regardless of device state or whether the API sweep succeeds, so an external cron monitor (e.g. UptimeRobot heartbeat) alerts when the plugin itself freezes. Empty (default) disables the ping.
 - **3.0.1-patched** (2026-11-02): Rate-limit redesign described above: one shared client and state sweep, budget headroom for commands, honest command results.
 
@@ -22,20 +22,32 @@ This still uses Govee's legacy developer API. App groups, sync boxes and other d
 
 The published polling defaults in server.json are a 90-second short poll and a 600-second long poll. The setup this fork was tested with uses 900/1800 seconds. Adjust shortPoll/longPoll to your setup, and match any heartbeat monitor's expected interval to your actual poll cadence.
 
-This Poly provides an interface between Govee and Polyglot v3 server. Provide basic control On/Off and Brightness of Govee WIFI Led Strip. Have been testing with H6104
+This plugin provides on/off, percentage-brightness control, status and reachability notices for compatible devices returned by Govee's legacy developer API. It does not add RGB color or color-temperature commands.
 
-## Installation
+## Installation and configuration
 
-1 - The first thing would be to get the API key, this can be done by installing the 'Govee Home' app on your mobile and browse the user tab - About - Request API key. Usually you get your key within seconds by mail."
+### Local installation for development/testing
 
-2 - Install this fork in PG3 as a Local plugin: SSH to your eISY/Polisy, clone this repository (`git clone https://github.com/superflytnt/udi-govee-nodeserver`), then in PG3 add a Local plugin pointing at the clone path.
+Public-store availability of this version has not been confirmed. Cloning the repository alone does not register or install a plugin in PG3(x).
 
-3 - Create a custom variable called api_key and paste the api key received.
+Follow [UDI's node server publishing guide](https://wiki.universal-devices.com/Publishing_a_node_server_to_the_node_server_store) to create a **Local** store entry. Use this repository's `server.json` for the plugin fields and add a purchase option with the current version and these installation settings:
 
-4 - (Optional) Create a custom variable called heartbeat_url with a heartbeat/cron-monitor URL. The plugin pings it on every short poll, even when devices are off or the API sweep fails, so your monitor alerts when the plugin itself freezes. Leave empty to disable.
+- Installation URL: `https://github.com/superflytnt/udi-govee-nodeserver`
+- Branch: `main`
+- Executable: `govee_poly.py`
+- Install script: `install.sh`
+
+Select the Local store, then install the entry through PG3(x). A Local entry is private to that PG3(x) instance. See [UDI's packaging guide](https://wiki.universal-devices.com/Packaging_a_node_server_for_distribution) for deployment details. Publishing access and any account requirements are handled by UDI.
+
+1. Request a developer API key in the Govee Home app under your profile's About section, if the option is available for your account. Keep this key private.
+2. Add the `api_key` custom parameter in PG3(x).
+3. Optionally add `heartbeat_url` with a heartbeat/cron-monitor URL. Pings are attempted on short polls, at most once per 60 seconds, even when devices are off or the API sweep fails. Match the monitor's expected interval to your actual short-poll cadence. Leave it empty to disable.
+
+## License
+
+This fork retains the GNU GPL v3 license in [LICENSE](LICENSE). Original author and library credits are retained below and in `server.json`.
 
 ## Source
 
 1. Using this Python Library to control the Govee - https://github.com/LaggAt/python-govee-api
 2. Based on the Node Server Template - https://github.com/Einstein42/udi-poly-template-python
-
