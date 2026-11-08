@@ -20,9 +20,7 @@ These changes were needed to reduce avoidable API-limit failures and make bright
 
 This still uses Govee's legacy developer API. App groups, sync boxes and other devices returned only by the newer API are not added by this repair. Offline status does not mean a device should be deleted. An intermittent eISY HTTP 404 was observed and later requests succeeded; its cause is not established and this fork does not claim to fix it.
 
-The tested PG3x setup used a 900-second short poll and an 1800-second long poll. The older defaults in server.json and the installation notes below have not yet been revised for that setup.
-
-![Build Status](https://travis-ci.org/therealmysteryman/udi-govee-nodeserver.svg?branch=master)
+The published polling defaults in server.json are a 90-second short poll and a 600-second long poll. The setup this fork was tested with uses 900/1800 seconds. Adjust shortPoll/longPoll to your setup, and match any heartbeat monitor's expected interval to your actual poll cadence.
 
 This Poly provides an interface between Govee and Polyglot v3 server. Provide basic control On/Off and Brightness of Govee WIFI Led Strip. Have been testing with H6104
 
@@ -30,7 +28,7 @@ This Poly provides an interface between Govee and Polyglot v3 server. Provide ba
 
 1 - The first thing would be to get the API key, this can be done by installing the 'Govee Home' app on your mobile and browse the user tab - About - Request API key. Usually you get your key within seconds by mail."
 
-2 - Install Govee from Polyglot Store
+2 - Install this fork in PG3 as a Local plugin: SSH to your eISY/Polisy, clone this repository (`git clone https://github.com/superflytnt/udi-govee-nodeserver`), then in PG3 add a Local plugin pointing at the clone path.
 
 3 - Create a custom variable called api_key and paste the api key received.
 
@@ -40,3 +38,4 @@ This Poly provides an interface between Govee and Polyglot v3 server. Provide ba
 
 1. Using this Python Library to control the Govee - https://github.com/LaggAt/python-govee-api
 2. Based on the Node Server Template - https://github.com/Einstein42/udi-poly-template-python
+
